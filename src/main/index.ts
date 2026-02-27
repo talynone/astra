@@ -7,6 +7,11 @@ import { createHash } from 'crypto'
 import * as mm from 'music-metadata'
 import * as library from './services/library'
 import {
+  isWindowsArm64,
+  resolveArm64Ffmpeg,
+  resolveArm64Ffprobe
+} from './services/ffmpegArm64'
+import {
   discordRpcService,
   type DiscordPresenceUpdate,
   type DiscordRpcConfigureOptions
@@ -1845,6 +1850,15 @@ async function resolveBinary(binary: 'ffmpeg' | 'ffprobe'): Promise<string | nul
 }
 
 async function resolveStaticModuleBinary(binary: 'ffmpeg' | 'ffprobe'): Promise<string | null> {
+  // On Windows ARM64, prefer the cached ARM64 binaries over the npm
+  // static modules which do not ship ARM64 builds.
+  if (isWindowsArm64()) {
+    const arm64Path = binary === 'ffmpeg'
+      ? await resolveArm64Ffmpeg()
+      : await resolveArm64Ffprobe()
+    if (arm64Path) return arm64Path
+  }
+
   try {
     if (binary === 'ffmpeg') {
       const module = await import('ffmpeg-static')

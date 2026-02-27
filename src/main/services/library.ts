@@ -7,6 +7,11 @@ import { createHash } from 'crypto'
 import { execFile, type ExecFileOptions } from 'child_process'
 import { fileURLToPath } from 'url'
 import { tmpdir, cpus } from 'os'
+import {
+  isWindowsArm64,
+  resolveArm64Ffmpeg,
+  resolveArm64Ffprobe
+} from './ffmpegArm64'
 import { parsePlaylistDocument, type ParsedPlaylistEntry, type PlaylistImportDetectedFormat } from './playlistImport'
 
 // Supported audio extensions
@@ -1881,7 +1886,7 @@ async function collectAudioFiles(
       entries = await readdir(currentDir, { withFileTypes: true })
     } catch (err: unknown) {
       if (err && typeof err === 'object' && 'code' in err &&
-          (err.code === 'EACCES' || err.code === 'EPERM')) {
+        (err.code === 'EACCES' || err.code === 'EPERM')) {
         skippedDirs.push(currentDir)
         return
       }
@@ -1960,9 +1965,9 @@ async function resolveFfprobeBinaryPath(): Promise<string | null> {
   const candidates = [
     ...(app.isPackaged
       ? [
-          join(process.resourcesPath, executable),
-          join(process.resourcesPath, 'bin', executable)
-        ]
+        join(process.resourcesPath, executable),
+        join(process.resourcesPath, 'bin', executable)
+      ]
       : []),
     ...(staticModulePath ? [staticModulePath] : []),
     ...(isWindows
@@ -2005,9 +2010,9 @@ async function resolveFfmpegBinaryPath(): Promise<string | null> {
   const candidates = [
     ...(app.isPackaged
       ? [
-          join(process.resourcesPath, executable),
-          join(process.resourcesPath, 'bin', executable)
-        ]
+        join(process.resourcesPath, executable),
+        join(process.resourcesPath, 'bin', executable)
+      ]
       : []),
     ...(staticModulePath ? [staticModulePath] : []),
     ...(isWindows
@@ -2040,6 +2045,10 @@ async function resolveFfmpegBinaryPath(): Promise<string | null> {
 }
 
 async function resolveStaticFfprobeBinaryPath(): Promise<string | null> {
+  if (isWindowsArm64()) {
+    const arm64Path = await resolveArm64Ffprobe()
+    if (arm64Path) return arm64Path
+  }
   try {
     const module = await import('ffprobe-static') as { path?: string; default?: { path?: string } }
     const modulePath = module.path ?? module.default?.path
@@ -2050,6 +2059,10 @@ async function resolveStaticFfprobeBinaryPath(): Promise<string | null> {
 }
 
 async function resolveStaticFfmpegBinaryPath(): Promise<string | null> {
+  if (isWindowsArm64()) {
+    const arm64Path = await resolveArm64Ffmpeg()
+    if (arm64Path) return arm64Path
+  }
   try {
     const module = await import('ffmpeg-static')
     return typeof module.default === 'string' ? module.default : null

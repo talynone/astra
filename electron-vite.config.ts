@@ -3,12 +3,7 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   main: {
-    plugins: [externalizeDepsPlugin()],
-    build: {
-      rollupOptions: {
-        external: ['ffmpeg-static', 'ffprobe-static']
-      }
-    }
+    plugins: [externalizeDepsPlugin({ include: ['ffmpeg-static', 'ffprobe-static'] })]
   },
   preload: {
     plugins: [externalizeDepsPlugin()]

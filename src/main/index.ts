@@ -1861,11 +1861,13 @@ async function resolveStaticModuleBinary(binary: 'ffmpeg' | 'ffprobe'): Promise<
 
   try {
     if (binary === 'ffmpeg') {
-      const module = await import(/* @vite-ignore */ 'ffmpeg-static')
+      const id = 'ffmpeg-static'
+      const module = await import(id)
       return typeof module.default === 'string' ? module.default : null
     }
 
-    const module = await import(/* @vite-ignore */ 'ffprobe-static') as { path?: string; default?: { path?: string } }
+    const id = 'ffprobe-static'
+    const module = await import(id) as { path?: string; default?: { path?: string } }
     const modulePath = module.path ?? module.default?.path
     return typeof modulePath === 'string' ? modulePath : null
   } catch {

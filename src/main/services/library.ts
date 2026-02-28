@@ -2050,7 +2050,7 @@ async function resolveStaticFfprobeBinaryPath(): Promise<string | null> {
     if (arm64Path) return arm64Path
   }
   try {
-    const module = await import('ffprobe-static') as { path?: string; default?: { path?: string } }
+    const module = await import(/* @vite-ignore */ 'ffprobe-static') as { path?: string; default?: { path?: string } }
     const modulePath = module.path ?? module.default?.path
     return typeof modulePath === 'string' ? modulePath : null
   } catch {
@@ -2064,7 +2064,7 @@ async function resolveStaticFfmpegBinaryPath(): Promise<string | null> {
     if (arm64Path) return arm64Path
   }
   try {
-    const module = await import('ffmpeg-static')
+    const module = await import(/* @vite-ignore */ 'ffmpeg-static')
     return typeof module.default === 'string' ? module.default : null
   } catch {
     return null

@@ -22,6 +22,8 @@ jobs:
             dist_cmd: dist:mac
           - os: windows-latest
             dist_cmd: dist:win
+          - os: windows-11-arm
+            dist_cmd: dist:win-arm64
 
     steps:
       - uses: actions/checkout@v4
@@ -52,7 +54,7 @@ jobs:
         run: |
           cd native
           ELECTRON_VERSION=$(node -p "require('electron/package.json').version")
-          ARCH=$(node -p "process.arch")
+          ARCH=${{ runner.arch == 'ARM64' && 'arm64' || 'x64' }}
           npx node-gyp rebuild --target=$ELECTRON_VERSION --arch=$ARCH --dist-url=https://electronjs.org/headers
 
       - name: Verify native module exists
@@ -70,7 +72,7 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: astra-${{ runner.os }}${{ inputs.version_tag && format('-{0}', inputs.version_tag) || '' }}
+          name: astra-${{ runner.os }}-${{ runner.arch }}${{ inputs.version_tag && format('-{0}', inputs.version_tag) || '' }}
           path: |
             dist/*.exe
             dist/*.dmg
